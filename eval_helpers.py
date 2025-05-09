@@ -14,7 +14,7 @@ def calculate_air_density(ds):
     R_v = 461.5 # Water vapor gas constant (J/(kg⋅K))
 
     # Calculate virtual temperature effect
-    virtual_temp_factor = (1 - ds['specific_humidity'] + ds['specific_humidity'] * R_d/R_v)
+    virtual_temp_factor = (1 - ds['specific_humidity'] + ds['specific_humidity'] * R_v/R_d)
     
     # Calculate density (pressure in hPa, hence multiply by 100 to convert to Pa)
     return (ds.coords['level'] * 100) / (R_d * ds['temperature'] * virtual_temp_factor)
@@ -203,7 +203,7 @@ def analyze_mass_conservation(ds, is_era=False):
     print(f"Time taken to calculate mass flux divergence: {time.time() - start} seconds")
     start = time.time()
     # Calculate tendency
-    ds['air_density_tendency'] = calculate_density_tendency(ds, is_era)
+    ds['air_density_tendency'] = calculate_density_tendency(ds, is_era=is_era)
     # Calculate continuity equation difference (where timesteps allow)
     # time_slice = slice(1, -1)  # Matching tendency calculation
     ds['continuity_error'] = abs(ds['air_density_tendency'] - ds['mass_flux_divergence'])
