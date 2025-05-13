@@ -1,5 +1,29 @@
 import numpy as np
 
+def global_dry_mass(ds):
+    r_earth = 6371000  # Earth's radius in meters
+    g = 9.81
+
+    # Get latitude and longitude spacings (assumes uniform grid)
+    d_lat = abs(ds.coords['lat'][1] - ds.coords['lat'][0])
+    d_lon = abs(ds.coords['lon'][1] - ds.coords['lon'][0])
+    
+    # Calculate latitudes for box edges
+    lat_edges_lower = ds.coords['lat'] - d_lat/2
+    lat_edges_upper = ds.coords['lat'] + d_lat/2
+    
+    # Calculate volume using the provided equation
+    area = (r_earth**2 * 
+              (np.sin(np.deg2rad(lat_edges_upper)) - np.sin(np.deg2rad(lat_edges_lower))) * 
+              d_lon * (np.pi/180))
+
+    # Calculate pressure differences between levels
+    levels = ds.coords['level'].values
+    delta_levels = np.diff(levels, prepend=0)
+    ds.coords['delta_level'] = ('level', delta_levels)
+
+    return (1 / g) * (1 - ds['specific_humidity']) * area * 100 * ds.coords['delta_level']
+
 def calculate_air_density(ds):
     """
     Calculate air density considering humidity.
@@ -24,7 +48,7 @@ def calculate_layer_heights(ds):
     Calculate the height of each pressure level layer.
     
     Args:
-        ds (xarray.Dataset): Dataset containing air_density and level coordinates
+        ds (xarray.Dataset): Dataset containing TOTAL air_density and level coordinates
     
     Returns:
         xarray.DataArray: Layer heights in meters
@@ -36,8 +60,8 @@ def calculate_layer_heights(ds):
     delta_levels = np.diff(levels, prepend=0)
     ds.coords['delta_level'] = ('level', delta_levels)
     
-    # Calculate height using hydrostatic equation, hPa -> Pa conversion
-    return 100 * ds.coords['delta_level'] / (ds['air_density'] * g)
+    # Calculate height using hydrostatic equation, hPa -> Pa conversion, with moist density
+    return 100 * ds.coords['delta_level'] * (1 - ds['specific_humidity']) / (ds['air_density'] * g)
 
 # %%
 def calculate_cell_volumes(ds):
@@ -206,7 +230,8 @@ def analyze_mass_conservation(ds, is_era=False):
     ds['air_density_tendency'] = calculate_density_tendency(ds, is_era=is_era)
     # Calculate continuity equation difference (where timesteps allow)
     # time_slice = slice(1, -1)  # Matching tendency calculation
-    ds['continuity_error'] = abs(ds['air_density_tendency'] - ds['mass_flux_divergence'])
+    ds['continuity_error'] = ds['air_density_tendency'] - ds['mass_flux_divergence']
+    ds['abs_continuity_error'] = abs(ds['continuity_error'])
     print(f"Time taken to calculate continuity residual: {time.time() - start} seconds")
 
     return ds
