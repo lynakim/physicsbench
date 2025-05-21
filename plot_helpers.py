@@ -167,7 +167,7 @@ def scale(
         vmin = center - diff
         vmax = center + diff
     return (data, matplotlib.colors.Normalize(vmin, vmax),
-            ("RdBu_r" if center is not None else "viridis"))
+            "RdBu_r") #if center is not None else "viridis"))
 
 def plot_data(
     data: dict[str, tuple[xarray.DataArray, matplotlib.colors.Normalize, str]],
