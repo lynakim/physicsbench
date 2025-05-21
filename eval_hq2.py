@@ -31,7 +31,7 @@ from plot_helpers import *
 #sample_time2 = '2020-03-01T12:00:00'
 #sample_time3 = '2020-05-01T12:00:00'
 #sample_time4 = '2020-07-01T12:00:00'
-sample_time = [np.datetime64('2020-08-01T12:00:00') + i * np.timedelta64(12, 'h') for i in range (0, 62)]
+sample_time = [np.datetime64('2020-08-01T12:00:00') + i * np.timedelta64(12, 'h') for i in range (0, 4)]
 #sample_time2 = [np.datetime64('2020-07-01T12:00:00') + i * np.timedelta64(7*24, 'h') for i in range (0, 5)]
 
 steps = 24
