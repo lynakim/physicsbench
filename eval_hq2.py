@@ -26,12 +26,12 @@ from plot_helpers import *
 
 
 # %%
-#sample_time = '2020-08-01T12:00:00'
+sample_time = '2020-08-01T12:00:00'
 #sample_time1 = '2020-01-01T12:00:00'
 #sample_time2 = '2020-03-01T12:00:00'
 #sample_time3 = '2020-05-01T12:00:00'
 #sample_time4 = '2020-07-01T12:00:00'
-sample_time = [np.datetime64('2020-08-01T12:00:00') + i * np.timedelta64(12, 'h') for i in range (0, 4)]
+#sample_time = [np.datetime64('2020-08-01T12:00:00') + i * np.timedelta64(12, 'h') for i in range (0, 4)]
 #sample_time2 = [np.datetime64('2020-07-01T12:00:00') + i * np.timedelta64(7*24, 'h') for i in range (0, 5)]
 
 steps = 24
@@ -55,7 +55,11 @@ era_batch = era_batch.rename({'latitude': 'lat', 'longitude': 'lon'})
 
 # %%
 # create prediction_timedelta dim for era if need plot
-era_batch.coords['prediction_timedelta'] = era_batch['time'].diff('time').astype('timedelta64[ns]')
+#era_batch.coords['prediction_timedelta'] = era_batch['time'].diff('time').astype('timedelta64[ns]')
+era_batch.coords['prediction_timedelta'] = [np.timedelta64(21600000000000 * i, 'ns') for i in range(1, steps+1)]
+
+#.astype('timedelta64[ns]')
+
 
 # %%
 print(gc_batch['time'] + gc_batch['prediction_timedelta'].isel(prediction_timedelta=0))
@@ -135,9 +139,9 @@ plt.show()
 
 # %%
 plot_size = 7
-plot_example_variable = 'residual_diff'
+plot_example_variable = 'col_difference'
 plot_example_level = 1000
-plot_example_max_steps = 10
+plot_example_max_steps = 5
 plot_example_robust = True
 input_dataset = gc_batch
 is_era = False
@@ -190,5 +194,17 @@ def calculate_residual_diff(ds, dt=6*3600, is_era=False):
 
 gc_batch['residual_diff'] = calculate_residual_diff(gc_batch)
 
+# %%
+# Calculate the difference in col_residual between ERA and GC
+# First, ensure ERA data is properly aligned with GC data
+common_deltas = np.intersect1d(era_batch['prediction_timedelta'].values, gc_batch['prediction_timedelta'].values)
+era_col = era_batch['col_residual'].isel(time=slice(0, len(common_deltas)))
+gc_col = gc_batch['col_residual'].sel(prediction_timedelta=common_deltas)
+#col_difference = era_col - gc_col
+gc_batch['col_difference'] = gc_col - era_col
+
+
+# Remove the time dimension from col_difference
+gc_batch['col_difference'] = gc_batch['col_difference'].isel(time=0).drop('time')
 
 # %%
