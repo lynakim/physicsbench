@@ -26,19 +26,19 @@ from plot_helpers import *
 
 
 # %%
-sample_time = '2020-08-01T12:00:00'
+#sample_time = '2020-08-01T12:00:00'
 #sample_time1 = '2020-01-01T12:00:00'
 #sample_time2 = '2020-03-01T12:00:00'
 #sample_time3 = '2020-05-01T12:00:00'
 #sample_time4 = '2020-07-01T12:00:00'
-#sample_time = [np.datetime64('2020-08-01T12:00:00') + i * np.timedelta64(12, 'h') for i in range (0,124)]
+sample_time = [np.datetime64('2020-08-01T12:00:00') + i * np.timedelta64(12, 'h') for i in range (0, 62)]
 #sample_time2 = [np.datetime64('2020-07-01T12:00:00') + i * np.timedelta64(7*24, 'h') for i in range (0, 5)]
 
-steps = 12
+steps = 24
 
 # %%
 Gzarr = xr.open_zarr('gs://weatherbench2/datasets/graphcast_hres_init/2020/date_range_2019-11-16_2021-02-01_12_hours_derived.zarr')
-gc_batch = Gzarr.sel(time=sample_time).isel(prediction_timedelta=slice(0, steps)).sel(lat=slice(65, 90))
+gc_batch = Gzarr.sel(time=sample_time).isel(prediction_timedelta=slice(0, steps))#.sel(lat=slice(65, 90))
 #gc_batch2 = Gzarr.sel(time=sample_time2).isel(prediction_timedelta=slice(0, steps))
 
 # %%
@@ -49,7 +49,7 @@ gc_batch_4 = Gzarr.sel(time=sample_time4).isel(prediction_timedelta=slice(0, ste
 
 # %%
 erazarr = xr.open_zarr('gs://weatherbench2/datasets/era5/1959-2023_01_10-wb13-6h-1440x721_with_derived_variables.zarr')
-era_batch = erazarr.sel(time=slice(np.datetime64(sample_time) + np.timedelta64(6, 'h'), np.datetime64(sample_time) + np.timedelta64((steps)*6, 'h'))).sel(latitude=slice(90, 65))
+era_batch = erazarr.sel(time=slice(np.datetime64(sample_time) + np.timedelta64(6, 'h'), np.datetime64(sample_time) + np.timedelta64((steps)*6, 'h')))#.sel(latitude=slice(90, 65))
 #era_batch = erazarr.sel(time=sample_time)
 era_batch = era_batch.rename({'latitude': 'lat', 'longitude': 'lon'})
 
@@ -112,10 +112,10 @@ plt.legend()
 plt.show()
 
 # %%
-
 # Compute mean and standard deviation
-mean = np.mean(gc_mass, axis=0)
-std_dev = np.std(gc_mass, axis=0)
+gc_mass_arr = np.array(gc_mass)
+mean = np.mean(gc_mass_arr, axis=0)
+std_dev = np.std(gc_mass_arr, axis=0)
 
 # %%
 # Plot
