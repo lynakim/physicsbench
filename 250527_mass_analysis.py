@@ -65,17 +65,17 @@ for month in range(1, 13):
     total_processing_time += month_duration
     print(f"Processing and saving for 2020-{month:02d} took {month_duration:.2f} seconds.")
 
-    if not first_file_processed:
-        try:
-            file_size_bytes = os.path.getsize(output_filename)
-            file_size_mb = file_size_bytes / (1024 * 1024)
-            estimated_total_storage_mb = file_size_mb * 12 
-            print(f"Size of {output_filename}: {file_size_mb:.4f} MB.")
-            print(f"Estimated total storage for 12 months: {estimated_total_storage_mb:.4f} MB (based on this first file). Note: actual total depends on data availability and size for each month.")
-            first_file_processed = True
-        except OSError as e:
-            print(f"Could not get size of {output_filename} to estimate total storage: {e}")
-    break
+    #   if not first_file_processed:
+    #       try:
+    #           file_size_bytes = os.path.getsize(output_filename)
+    #           file_size_mb = file_size_bytes / (1024 * 1024)
+    #           estimated_total_storage_mb = file_size_mb * 12 
+    #           print(f"Size of {output_filename}: {file_size_mb:.4f} MB.")
+    #           print(f"Estimated total storage for 12 months: {estimated_total_storage_mb:.4f} MB (based on this first file). Note: actual total depends on data availability and size for each month.")
+    #           first_file_processed = True
+    #        except OSError as e:
+    #            print(f"Could not get size of {output_filename} to estimate total storage: {e}")
+    #    break
 
 print(f"\nTotal processing time for all months: {total_processing_time:.2f} seconds.")
 if first_file_processed:

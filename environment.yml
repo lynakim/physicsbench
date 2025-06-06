@@ -9,4 +9,7 @@ dependencies:
   - matplotlib
   - numpy
   - xarray
-  - dask 
+  - dask
+  - zarr
+  - tqdm
+  - gcsfs 

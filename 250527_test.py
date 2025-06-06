@@ -5,7 +5,7 @@ import numpy as np
 
 # %%
 # load the data
-ds = xr.open_dataset('global_dry_mass_2020_01.nc')
+ds = xr.open_dataset('global_dry_mass_2020_01_aggregated_computed.nc')#updated filename
 
 # %% 
 steps = 40
