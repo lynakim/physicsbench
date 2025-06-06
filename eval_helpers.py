@@ -1,6 +1,6 @@
 import numpy as np
 
-def global_dry_mass(ds):
+def calculate_dry_mass(ds):
     r_earth = 6371000  # Earth's radius in meters
     g = 9.81
 
@@ -191,6 +191,37 @@ def calculate_density_tendency(ds, dt=6*3600, is_era=False):
         tendency = tendency.isel(prediction_timedelta=slice(1, -1))
     return tendency
 
+def calculate_col_density_tendency(ds, dt=6*3600, is_era=False):
+    """
+    Calculate the rate of change of air density using centered differences.
+    
+    Args:
+        ds (xarray.Dataset): Dataset containing air_density
+        dt (float): Time step in seconds between consecutive predictions
+    
+    Returns:
+        xarray.DataArray: Air density tendency in kg/m³/s
+    """
+    # Get time differences in seconds
+    # time_diffs = ds.prediction_timedelta.diff(dim='prediction_timedelta').astype('timedelta64[s]').values
+    if is_era:
+        density_forward = ds["col_density"].shift(time=-1)
+        density_backward = ds["col_density"].shift(time=1)
+    else:
+        # Calculate centered differences
+        density_forward = ds["col_density"].shift(prediction_timedelta=-1)
+        density_backward = ds["col_density"].shift(prediction_timedelta=1)
+    
+    # Use actual time differences for each step
+    tendency = (density_forward - density_backward) / (2 * dt)
+    
+    # Remove edge timesteps that don't have complete differences
+    if is_era:
+        tendency = tendency.isel(time=slice(1, -1))
+    else:   
+        tendency = tendency.isel(prediction_timedelta=slice(1, -1))
+    return tendency
+
 
 def analyze_mass_conservation(ds, is_era=False):
     """
@@ -233,5 +264,57 @@ def analyze_mass_conservation(ds, is_era=False):
     ds['continuity_error'] = ds['air_density_tendency'] - ds['mass_flux_divergence']
     ds['abs_continuity_error'] = abs(ds['continuity_error'])
     print(f"Time taken to calculate continuity residual: {time.time() - start} seconds")
+
+    return ds
+
+def analyze_col_mass_conservation(ds, is_era=False):
+    """
+    Perform complete mass conservation analysis on a dataset.
+    
+    Args:
+        ds (xarray.Dataset): Input dataset containing required variables
+        is_era (bool): Whether the dataset is ERA5
+    Returns:
+        xarray.Dataset: Dataset with added mass conservation variables
+    """
+    # Calculate basic quantities
+    import time
+    start = time.time()
+    print("Calculating basic quantities")
+    ds['dry_mass'] = calculate_dry_mass(ds)
+    print(f"Time taken to calculate dry mass: {time.time() - start} seconds")
+    start = time.time()
+    ds['air_density'] = calculate_air_density(ds)
+    print(f"Time taken to calculate air density: {time.time() - start} seconds")
+    start = time.time()
+    ds.coords['height'] = calculate_layer_heights(ds)
+    print(f"Time taken to calculate layer heights: {time.time() - start} seconds")
+    start = time.time()
+    ds.coords['volume'] = calculate_cell_volumes(ds)
+    print(f"Time taken to calculate cell volumes: {time.time() - start} seconds")
+
+    ds['col_density'] = ds['dry_mass'].sum(dim='level') / ds['volume'].sum(dim='level')
+    print(f"Time taken to calculate col density: {time.time() - start} seconds")
+    start = time.time()
+    ds['col_density_tendency'] = calculate_col_density_tendency(ds, is_era=is_era)
+    print(f"Time taken to calculate col density tendency: {time.time() - start} seconds")
+    start = time.time()
+    # Calculate mass fluxes
+    ds['mass_flux_u'], ds['mass_flux_v'] = calculate_mass_flux(ds)
+    print(f"Time taken to calculate mass fluxes: {time.time() - start} seconds")
+    start = time.time()
+    ds['mass_flux_divergence'] = calculate_mass_flux_divergence(ds['mass_flux_u'], ds['mass_flux_v'])
+    print(f"Time taken to calculate mass flux divergence: {time.time() - start} seconds")
+    #start = time.time()
+    #ds['col_flux'] = ds['mass_flux_divergence'].sum(dim='level')
+    #print(f"Time taken to calculate col mass flux: {time.time() - start} seconds")
+    ds['col_flux'] = ds['divergence'] @ ds['height'] / ds['height'].sum(dim='level')
+    start = time.time()
+    ds['col_residual'] = ds['col_density_tendency'] - ds['col_flux']
+    # ds['abs_continuity_error'] = abs(ds['continuity_error'])
+    print(f"Time taken to calculate column continuity residual: {time.time() - start} seconds")
+    
+    
+
 
     return ds
