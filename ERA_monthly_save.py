@@ -21,14 +21,14 @@ for month in range(1, 13):
     # Define the start and end dates for the current month
     start_date = np.datetime64(f'2020-{month:02d}-01T00:00:00')
     # Use pandas to get the end of the month, ensuring correct day (e.g., 29 for Feb in leap year 2020)
-    end_date = pd.to_datetime(start_date).to_period('M').end_time.to_datetime64() + np.timedelta64(12, 'h') # include the last 12h step of the month
+    end_date = pd.to_datetime(start_date).to_period('M').end_time.to_datetime64() + np.timedelta64(6, 'h') # include the last 12h step of the month
     
 
     # Create sample times for the current month at 12-hour intervals
     # Ensure we only select times available in Gzarr
     available_times_in_garr = erazarr.time.data
     monthly_sample_time = [
-        t for t in pd.date_range(start=start_date, end=end_date, freq='12H').to_numpy(dtype='datetime64[ns]')
+        t for t in pd.date_range(start=start_date, end=end_date, freq='6H').to_numpy(dtype='datetime64[ns]')
         if t in available_times_in_garr
     ]
     
