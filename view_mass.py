@@ -4,13 +4,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Read the netCDF file
-ds = xr.open_dataset('global_dry_mass.nc')
+ds = xr.open_dataset('global_dry_mass_2020_02.nc')
 
 # Prepare axes
 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 12))
 
 # Get hours for x-axis
-hours = ds.predictiontime_delta.values.astype('timedelta64[h]').astype(float)
+hours = ds['prediction_timedelta'].values.astype('timedelta64[h]').astype(float)
 
 # If mass is 2D (time, prediction_timedelta), plot each time as a separate line
 mass = ds.mass.values
@@ -37,7 +37,7 @@ else:
 
 ax1.set_xlabel('Lead Time (hours)')
 ax1.set_ylabel('Global Dry Mass (kg)')
-ax1.set_title('Global Dry Mass Over Time')
+ax1.set_title('Global Dry Mass Over Time, 2020/02')
 ax1.grid(True)
 ax1.legend()
 
@@ -63,5 +63,5 @@ print("\nTime values:")
 print(ds.time.values)
 
 print("\nPrediction time delta values:")
-print(ds.predictiontime_delta.values) 
+print(ds['prediction_timedelta'].values) 
 # %%

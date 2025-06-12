@@ -1,5 +1,6 @@
 # %% 
 print('hello')
+
 # %%
 import dataclasses
 import datetime
@@ -30,7 +31,7 @@ sample_time = '2020-10-29T12:00:00'
 #sample_time = [np.datetime64('2020-08-01T12:00:00') + i * np.timedelta64(12, 'h') for i in range (0, 4)]
 #sample_time2 = [np.datetime64('2020-07-01T12:00:00') + i * np.timedelta64(7*24, 'h') for i in range (0, 5)]
 
-steps = 12
+steps = 40
 
 # %%
 Gzarr = xr.open_zarr('gs://weatherbench2/datasets/graphcast_hres_init/2020/date_range_2019-11-16_2021-02-01_12_hours_derived.zarr')
@@ -71,7 +72,7 @@ era_tot_abs_residual = era_batch['abs_continuity_error'].sum(dim=['lat', 'lon', 
 
 # %%
 era_batch = analyze_col_mass_conservation(era_batch, is_era=True)
-gc_batch = analyze_col_mass_conservation(gc_batch)
+#gc_batch = analyze_col_mass_conservation(gc_batch)
 # %%
 
 # %%
@@ -128,12 +129,12 @@ plt.show()
 
 # %%
 plot_size = 7
-plot_example_variable = 'col_density'
+plot_example_variable = 'col_flux'
 plot_example_level = 1000
-plot_example_max_steps = 6
+plot_example_max_steps = 5
 plot_example_robust = True
-input_dataset = gc_batch
-is_era = False
+input_dataset = era_batch
+is_era = True
 
 data = {
     plot_example_variable: scale(
@@ -212,31 +213,32 @@ def calculate_level_height(ds, lat, lon):
     #heights = ds['height'].sel(time='2020-10-29T18:00:00',lat=lat, lon=lon, method='nearest')
     heights = ds['height'].sel(prediction_timedelta='21600000000000',lat=lat, lon=lon, method='nearest')
     level_height = heights
+    level_height[-1] /= 2
     for i in range(len(p)-2, -1, -1):
         level_height[i] += heights[i+1]
     return level_height
 
-gc_level_height = calculate_level_height(gc_batch, 37.5, -122)
+gc_level_height = calculate_level_height(gc_batch, 37.5, 170)
 
 # %%
-#plt.plot(p, gc_level_height, label='height from air density GC 6hr')
+plt.plot(p, gc_level_height, label='height from air density GC 6hr')
 #plt.plot(p, era_batch['geopotential'].sel(time='2020-11-01T06:00:00',lat=37.5, lon=-122, method='nearest') / 9.81, label='height from geopotential ERA 6hr')
-#plt.plot(p, gc_batch['geopotential'].sel(prediction_timedelta='237600000000000',lat=37.5, lon=-122, method='nearest') / 9.81, label='height from geopotential GC 66hr')
+plt.plot(p, gc_batch['geopotential'].sel(prediction_timedelta='21600000000000',lat=37.5, lon=170, method='nearest') / 9.81, label='height from geopotential GC 66hr')
 #plt.plot(t, era_batch['geopotential'].sel(lat=37.5, lon=-122, level=500, method='nearest') / 9.81, label='height from geopotential ERA')
 
-plt.plot(t, era_batch['col_density_tendency'].sel(lat=37.5, lon=-122, method='nearest'), label='ERA col density tendency')
-plt.plot(t, era_batch['col_flux'].sel(lat=37.5, lon=-122, method='nearest'), label='ERA col mass flux')
+#plt.plot(t, era_batch['col_density_tendency'].sel(lat=37.5, lon=122, method='nearest'), label='ERA col density tendency')
+#plt.plot(t, era_batch['col_flux'].sel(lat=37.5, lon=122, method='nearest'), label='ERA col mass flux')
 
 
-#plt.xlabel('pressure level (hPa)')
+plt.xlabel('pressure level (hPa)')
 #plt.xlabel('lead time (hr)')
-plt.xlabel('time')
-plt.ylabel('flux (kg/m³/s)')
-#plt.ylabel('height (m)')
-plt.xticks(np.arange(0, 6 * (steps + 1), 12))
-#plt.xlim(1000, 0)
+#plt.xlabel('time')
+#plt.ylabel('flux (kg/m³/s)')
+plt.ylabel('height (m)')
+#plt.xticks(np.arange(0, 6 * (steps + 1), 12))
+plt.xlim(1000, 0)
 plt.xticks(rotation=90) 
-plt.title('ERA tendency vs flux at 37.5N, 122W')
+plt.title('ERA tendency vs flux at 37.5N, 122E')
 plt.legend()
 plt.show()
 

@@ -1,0 +1,15 @@
+name: physicsbench
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - cartopy
+  - google-cloud-storage
+  - ipython
+  - matplotlib
+  - numpy
+  - xarray
+  - dask
+  - zarr
+  - tqdm
+  - gcsfs 

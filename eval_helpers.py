@@ -160,8 +160,9 @@ def calculate_mass_flux_divergence(mass_flux_u, mass_flux_v, R=6371e3):
     # Total divergence is the sum of the components
     return u_div + v_div
 
+"""
 def calculate_density_tendency(ds, dt=6*3600, is_era=False):
-    """
+
     Calculate the rate of change of air density using centered differences.
     
     Args:
@@ -170,7 +171,7 @@ def calculate_density_tendency(ds, dt=6*3600, is_era=False):
     
     Returns:
         xarray.DataArray: Air density tendency in kg/m³/s
-    """
+
     # Get time differences in seconds
     # time_diffs = ds.prediction_timedelta.diff(dim='prediction_timedelta').astype('timedelta64[s]').values
     if is_era:
@@ -190,6 +191,7 @@ def calculate_density_tendency(ds, dt=6*3600, is_era=False):
     else:   
         tendency = tendency.isel(prediction_timedelta=slice(1, -1))
     return tendency
+"""
 
 def calculate_col_density_tendency(ds, dt=6*3600, is_era=False):
     """
@@ -202,6 +204,38 @@ def calculate_col_density_tendency(ds, dt=6*3600, is_era=False):
     Returns:
         xarray.DataArray: Air density tendency in kg/m³/s
     """
+    # Get time differences in seconds
+    # time_diffs = ds.prediction_timedelta.diff(dim='prediction_timedelta').astype('timedelta64[s]').values
+    if is_era:
+        density_forward = ds["col_density"].shift(time=-1)
+        density_backward = ds["col_density"].shift(time=0)
+    else:
+        # Calculate centered differences
+        density_forward = ds["col_density"].shift(prediction_timedelta=-1)
+        density_backward = ds["col_density"].shift(prediction_timedelta=0)
+    
+    # Use actual time differences for each step
+    tendency = (density_forward - density_backward) / dt
+    
+    # Remove edge timesteps that don't have complete differences
+    if is_era:
+        tendency = tendency.isel(time=slice(0, -1))
+    else:   
+        tendency = tendency.isel(prediction_timedelta=slice(0, -1))
+    return tendency
+
+"""
+def calculate_col_density_tendency(ds, dt=6*3600, is_era=False):
+ 
+    Calculate the rate of change of air density using centered differences.
+    
+    Args:
+        ds (xarray.Dataset): Dataset containing air_density
+        dt (float): Time step in seconds between consecutive predictions
+    
+    Returns:
+        xarray.DataArray: Air density tendency in kg/m³/s
+  
     # Get time differences in seconds
     # time_diffs = ds.prediction_timedelta.diff(dim='prediction_timedelta').astype('timedelta64[s]').values
     if is_era:
@@ -221,7 +255,7 @@ def calculate_col_density_tendency(ds, dt=6*3600, is_era=False):
     else:   
         tendency = tendency.isel(prediction_timedelta=slice(1, -1))
     return tendency
-
+"""
 
 def analyze_mass_conservation(ds, is_era=False):
     """
