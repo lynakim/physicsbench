@@ -14,12 +14,12 @@ first_file_processed = False
 estimated_total_storage_gb = 0
 
 # Iterate over each month of 2020
-for month in range(1, 13):
-    print(f"\nProcessing 2020-{month:02d}...")
+for month in range(1, 2):
+    print(f"\nProcessing 2021-{month:02d}...")
     start_time_month = time.time()
 
     # Define the start and end dates for the current month
-    start_date = np.datetime64(f'2020-{month:02d}-01T00:00:00')
+    start_date = np.datetime64(f'2021-{month:02d}-01T00:00:00')
     # Use pandas to get the end of the month, ensuring correct day (e.g., 29 for Feb in leap year 2020)
     end_date = pd.to_datetime(start_date).to_period('M').end_time.to_datetime64() + np.timedelta64(6, 'h') # include the last 12h step of the month
     
@@ -33,12 +33,12 @@ for month in range(1, 13):
     ]
     
     if not monthly_sample_time:
-        print(f"No data available for 2020-{month:02d}, skipping.")
+        print(f"No data available for 2021-{month:02d}, skipping.")
         end_time_month = time.time()
         month_duration = end_time_month - start_time_month
         # No processing done, but account for the check time if desired, or just skip total_processing_time update for skipped months.
         # For simplicity, let's not add this small check time to total_processing_time.
-        print(f"Skipping 2020-{month:02d} took {month_duration:.2f} seconds (no data).")
+        print(f"Skipping 2021-{month:02d} took {month_duration:.2f} seconds (no data).")
         continue
 
     # monthly_sample_time = [np.datetime64('2020-08-01T12:00:00') + i * np.timedelta64(12, 'h') for i in range (0, 2)]
@@ -58,14 +58,14 @@ for month in range(1, 13):
     })
 
     # Save to netCDF file, named by month
-    output_filename = f'era_global_dry_mass_2020_{month:02d}.nc'
+    output_filename = f'era_global_dry_mass_2021_{month:02d}.nc'
     result_ds.to_netcdf(output_filename)
     print(f"Saved {output_filename}")
 
     end_time_month = time.time()
     month_duration = end_time_month - start_time_month
     total_processing_time += month_duration
-    print(f"Processing and saving for 2020-{month:02d} took {month_duration:.2f} seconds.")
+    print(f"Processing and saving for 2021-{month:02d} took {month_duration:.2f} seconds.")
 
     # if not first_file_processed:
     #     try:
